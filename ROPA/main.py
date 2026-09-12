@@ -1,10 +1,11 @@
 import os
 import time
-import subprocess
 import base64
 import requests
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+from rembg import remove
+from PIL import Image
 
 app = Flask(__name__, static_folder='.')
 CORS(app)
@@ -15,14 +16,13 @@ RESULTADOS_FOLDER = './resultados'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULTADOS_FOLDER, exist_ok=True)
 
-# Variables para autenticación y guardado permanente en GitHub
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
 GITHUB_REPO = "barsantanar61/ropa"
 
 def guardar_en_github_permanente(filepath_local, filename):
     """Sube la imagen procesada a la carpeta resultados/ en GitHub."""
     if not GITHUB_TOKEN:
-        print("Aviso: GITHUB_TOKEN no encontrado. La imagen solo persistirá durante la sesión actual.")
+        print("Aviso: GITHUB_TOKEN no encontrado. Guardado permanente omitido.")
         return
 
     url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/ROPA/resultados/{filename}"
@@ -44,30 +44,26 @@ def guardar_en_github_permanente(filepath_local, filename):
 
         response = requests.put(url, json=data, headers=headers)
         if response.status_code in [200, 201]:
-            print(f"✅ Imagen {filename} guardada permanentemente en GitHub")
+            print(f"✅ Imagen {filename} guardada en GitHub")
         else:
-            print(f"❌ Error al guardar en GitHub ({response.status_code}): {response.text}")
+            print(f"❌ Error GitHub ({response.status_code}): {response.text}")
     except Exception as e:
         print(f"❌ Excepción al subir a GitHub: {str(e)}")
 
 
 @app.route('/')
 def index():
-    """Sirve la página principal de la aplicación."""
     return send_from_directory('.', 'index.html')
 
 
 @app.route('/<path:path>')
 def static_files(path):
-    """Sirve archivos estáticos como imágenes de resultados, CSS o JS."""
     return send_from_directory('.', path)
 
 
 @app.route('/api/garments', methods=['GET'])
 def get_garments():
-    """Devuelve dinámicamente la lista de prendas procesadas que hay en la carpeta /resultados."""
     files = os.listdir(RESULTADOS_FOLDER) if os.path.exists(RESULTADOS_FOLDER) else []
-    
     valid_files = [f"/resultados/{f}" for f in files if f.lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
     
     tops = [f for f in valid_files if 'pantalon' not in f.lower()]
@@ -78,28 +74,30 @@ def get_garments():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    """Recibe la imagen capturada por la cámara, la procesa y la guarda."""
     if 'file' not in request.files:
-        return jsonify({'error': 'No se ha proporcionado ningún archivo'}), 400
+        return jsonify({'error': 'No hay archivo'}), 400
     
     file = request.files['file']
     prenda_tipo = request.form.get('type', 'prenda')
     
     filename = f"{prenda_tipo}_{int(time.time())}.png"
     filepath_upload = os.path.join(UPLOAD_FOLDER, filename)
+    filepath_resultado = os.path.join(RESULTADOS_FOLDER, filename)
+    
     file.save(filepath_upload)
     
     try:
-        # 1. Recortar el fondo usando el script exacto de tu repositorio
-        subprocess.run(["python", "quitar_fondo_ropa_mejorado_v6pro.py", "-i", filepath_upload, "-o", RESULTADOS_FOLDER], check=True)
+        # Procesamiento directo en memoria (mucho más rápido que un subproceso)
+        input_image = Image.open(filepath_upload)
+        output_image = remove(input_image)
+        output_image.save(filepath_resultado)
         
-        filepath_resultado = os.path.join(RESULTADOS_FOLDER, filename)
-        
-        # 2. Guardar automáticamente en el repositorio de GitHub de forma permanente
+        # Guardar en GitHub
         guardar_en_github_permanente(filepath_resultado, filename)
 
-        return jsonify({'message': 'Foto procesada y guardada correctamente', 'filename': filename}), 200
+        return jsonify({'message': 'Foto procesada correctamente', 'filename': filename}), 200
     except Exception as e:
+        print(f"Error procesando imagen: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
