@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Armario Virtual - Lookbook Aesthetic</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f5f4f0;
+            --accent-color: #1a1a1a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: #0f0f11;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        header p {
+            color: #a1a1aa;
+            font-size: 0.95rem;
+        }
+
+        /* PALETA DE FONDOS */
+        .controls-bar {
+            display: flex;
+            gap: 15px;
+            background: #18181b;
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: 1px solid #27272a;
+            margin-bottom: 25px;
+            align-items: center;
+        }
+
+        .controls-bar label {
+            font-size: 0.85rem;
+            color: #a1a1aa;
+            font-weight: 500;
+        }
+
+        .color-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .color-dot:hover, .color-dot.active {
+            transform: scale(1.2);
+            border-color: #3b82f6;
+        }
+
+        /* CONTENEDOR VERTICAL (CÁPTURA / OUTFIT) */
+        .outfit-container {
+            width: 100%;
+            max-width: 440px;
+            background-color: var(--bg-color);
+            border-radius: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            padding: 35px 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0px;
+            transition: background-color 0.4s ease;
+        }
+
+        /* SECCIONES ARRIBA Y ABAJO */
+        .garment-section {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .garment-section.top-section {
+            height: 270px;
+            z-index: 2;
+        }
+
+        .garment-section.bottom-section {
+            height: 310px;
+            z-index: 1;
+            margin-top: -20px; /* Ligero ajuste de solapamiento estético */
+        }
+
+        /* BOTONES NAVEGADORES FLOTANTES */
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(0,0,0,0.08);
+            color: #18181b;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.3rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+            user-select: none;
+            z-index: 10;
+        }
+
+        .nav-btn:hover {
+            background: #ffffff;
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+
+        .nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* MARCO DE PRENDA CON SOMBRA */
+        .garment-display {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .garment-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 18px 22px rgba(0, 0, 0, 0.22));
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .garment-img.fade {
+            opacity: 0;
+            transform: scale(0.96);
+        }
+
+        .counter-badge {
+            position: absolute;
+            bottom: -5px;
+            background: rgba(24, 24, 27, 0.75);
+            backdrop-filter: blur(6px);
+            color: #e4e4e7;
+            font-size: 0.72rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>✨ Armario Virtual</h1>
+        <p>Pasa las prendas para armar tu outfit</p>
+    </header>
+
+    <!-- SELECTOR DE FONDO ESTÉTICO -->
+    <div class="controls-bar">
+        <label>Fondo de Estudio:</label>
+        <div class="color-dot active" style="background: #f5f4f0;" onclick="changeBg('#f5f4f0', this)" title="Lino Warm"></div>
+        <div class="color-dot" style="background: #ffffff;" onclick="changeBg('#ffffff', this)" title="Blanco Puro"></div>
+        <div class="color-dot" style="background: #e2e8f0;" onclick="changeBg('#e2e8f0', this)" title="Gris Studio"></div>
+        <div class="color-dot" style="background: #fbcfe8;" onclick="changeBg('#fbcfe8', this)" title="Soft Pink"></div>
+        <div class="color-dot" style="background: #27272a;" onclick="changeBg('#27272a', this)" title="Dark Mode"></div>
+    </div>
+
+    <!-- VISTA PREVIA DEL CONJUNTO (ARRIBA / ABAJO) -->
+    <div class="outfit-container" id="outfitCanvas">
+        
+        <!-- PARTE SUPERIOR -->
+        <div class="garment-section top-section">
+            <button class="nav-btn" onclick="prevTop()">‹</button>
+            <div class="garment-display">
+                <img id="topImg" class="garment-img" src="" alt="Parte de Arriba">
+                <div class="counter-badge" id="topBadge">Arriba 1/1</div>
+            </div>
+            <button class="nav-btn" onclick="nextTop()">›</button>
+        </div>
+
+        <!-- PARTE INFERIOR -->
+        <div class="garment-section bottom-section">
+            <button class="nav-btn" onclick="prevBottom()">‹</button>
+            <div class="garment-display">
+                <img id="bottomImg" class="garment-img" src="" alt="Parte de Abajo">
+                <div class="counter-badge" id="bottomBadge">Abajo 1/1</div>
+            </div>
+            <button class="nav-btn" onclick="nextBottom()">›</button>
+        </div>
+
+    </div>
+
+    <script>
+        // RUTA DE PRENDAS EXTRAÍDAS DE TU CARPETA /resultados
+        const tops = [
+            "./resultados/camiseta_transparente.png",
+            "./resultados/WhatsApp Image 2026-09-10 at 19.18.18_transparente.png",
+            "./resultados/WhatsApp Image 2026-09-10 at 19.28.52_transparente.png"
+        ];
+
+        const bottoms = [
+            "./resultados/WhatsApp Image 2026-09-10 at 22.29.19 (1)_transparente.png"
+        ];
+
+        let topIdx = 0;
+        let bottomIdx = 0;
+
+        function updateTop() {
+            const img = document.getElementById('topImg');
+            img.classList.add('fade');
+            setTimeout(() => {
+                img.src = tops[topIdx];
+                document.getElementById('topBadge').innerText = `Arriba ${topIdx + 1}/${tops.length}`;
+                img.classList.remove('fade');
+            }, 120);
+        }
+
+        function updateBottom() {
+            const img = document.getElementById('bottomImg');
+            img.classList.add('fade');
+            setTimeout(() => {
+                img.src = bottoms[bottomIdx];
+                document.getElementById('bottomBadge').innerText = `Abajo ${bottomIdx + 1}/${bottoms.length}`;
+                img.classList.remove('fade');
+            }, 120);
+        }
+
+        function prevTop() { topIdx = (topIdx - 1 + tops.length) % tops.length; updateTop(); }
+        function nextTop() { topIdx = (topIdx + 1) % tops.length; updateTop(); }
+        function prevBottom() { bottomIdx = (bottomIdx - 1 + bottoms.length) % bottoms.length; updateBottom(); }
+        function nextBottom() { bottomIdx = (bottomIdx + 1) % bottoms.length; updateBottom(); }
+
+        function changeBg(color, el) {
+            document.getElementById('outfitCanvas').style.backgroundColor = color;
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        // Carga inicial
+        updateTop();
+        updateBottom();
+    </script>
+</body>
+</html>

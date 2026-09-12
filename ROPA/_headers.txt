@@ -1,0 +1,3 @@
+/*
+  Permissions-Policy: camera=(self)
+  Access-Control-Allow-Origin: *
