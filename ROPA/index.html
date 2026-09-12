@@ -3,176 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Armario Virtual - Studio & Camera</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Armario Virtual</title>
     <style>
-        :root { --bg-color: #f5f4f0; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background-color: #0f0f11; color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px 15px; }
-
-        header { text-align: center; margin-bottom: 20px; }
-        header h1 { font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, #fff 0%, #a1a1aa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-        /* CONTENEDOR OUTFIT */
-        .outfit-container { width: 100%; max-width: 420px; background-color: var(--bg-color); border-radius: 28px; padding: 30px 20px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); }
-        .garment-section { width: 100%; display: flex; align-items: center; justify-content: space-between; position: relative; }
-        .garment-section.top-section { height: 260px; z-index: 2; }
-        .garment-section.bottom-section { height: 290px; z-index: 1; margin-top: -20px; }
-        
-        .nav-btn { background: rgba(255, 255, 255, 0.9); border: none; color: #18181b; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .garment-display { flex: 1; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
-        .garment-img { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 18px 22px rgba(0,0,0,0.22)); }
-
-        /* BOTÓN CÁMARA */
-        .camera-trigger { margin-top: 25px; background: #2563eb; color: white; border: none; padding: 14px 28px; border-radius: 50px; font-weight: 600; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4); }
-
-        /* MODAL CÁMARA */
-        .camera-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 100; flex-direction: column; align-items: center; justify-content: space-between; padding: 20px 0; }
-        .camera-modal.active { display: flex; }
-        
-        .camera-viewport { position: relative; width: 100%; max-width: 450px; height: 72vh; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #111; }
-        #videoFeed { width: 100%; height: 100%; object-fit: cover; }
-        
-        /* OVERLAY GUÍA REAL */
-        .real-silhouette-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; align-items: center; justify-content: center; }
-        .real-silhouette-overlay img { max-width: 82%; max-height: 82%; object-fit: contain; opacity: 0.45; filter: brightness(2) contrast(1.5) drop-shadow(0 0 8px rgba(59, 130, 246, 0.8)); }
-
-        .camera-controls { display: flex; gap: 15px; align-items: center; width: 100%; justify-content: space-evenly; }
-        .type-btn { background: #27272a; color: #ccc; border: 1px solid #3f3f46; padding: 8px 18px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; }
-        .type-btn.active { background: #fff; color: #000; font-weight: 600; }
-        .capture-btn { width: 65px; height: 65px; border-radius: 50%; border: 4px solid #fff; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .capture-btn-inner { width: 48px; height: 48px; background: #fff; border-radius: 50%; }
-        .close-btn { position: absolute; top: 20px; right: 20px; color: #fff; font-size: 2rem; background: none; border: none; z-index: 110; cursor: pointer; }
+        body { font-family: sans-serif; text-align: center; margin: 20px; background-color: #f4f4f9; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .section { margin-bottom: 20px; }
+        .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px; }
+        .gallery img { width: 100px; height: 100px; object-fit: contain; border: 1px solid #ddd; border-radius: 5px; background-color: #fff; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; }
+        button:disabled { background-color: #ccc; }
+        #status { margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h1>Mi Armario Virtual</h1>
 
-    <header>
-        <h1>✨ Armario Virtual</h1>
-    </header>
-
-    <div class="outfit-container">
-        <div class="garment-section top-section">
-            <button class="nav-btn" onclick="prevTop()">‹</button>
-            <div class="garment-display"><img id="topImg" class="garment-img" src=""></div>
-            <button class="nav-btn" onclick="nextTop()">›</button>
-        </div>
-        <div class="garment-section bottom-section">
-            <button class="nav-btn" onclick="prevBottom()">‹</button>
-            <div class="garment-display"><img id="bottomImg" class="garment-img" src=""></div>
-            <button class="nav-btn" onclick="nextBottom()">›</button>
-        </div>
-    </div>
-
-    <button class="camera-trigger" onclick="openCamera()">📷 Encuadrar y Tomar Foto</button>
-
-    <!-- MODAL CÁMARA -->
-    <div class="camera-modal" id="cameraModal">
-        <button class="close-btn" onclick="closeCamera()">✕</button>
-        
-        <div class="camera-controls">
-            <button class="type-btn active" id="btnCamiseta" onclick="setSilhouette('camiseta')">Parte Superior</button>
-            <button class="type-btn" id="btnPantalon" onclick="setSilhouette('pantalon')">Pantalón</button>
+        <div class="section">
+            <h3>Añadir Prenda</h3>
+            <input type="file" id="imageInput" accept="image/*" capture="environment">
+            <br><br>
+            <select id="typeSelect">
+                <option value="camiseta">Camiseta / Superior</option>
+                <option value="pantalon">Pantalón / Inferior</option>
+            </select>
+            <br><br>
+            <button id="uploadBtn" onclick="uploadImage()">Subir y Procesar</button>
+            <p id="status"></p>
         </div>
 
-        <div class="camera-viewport">
-            <video id="videoFeed" autoplay playsinline></video>
-            <div class="real-silhouette-overlay">
-                <img id="guideImg" src="/resultados/camiseta_transparente.png" alt="Guía Real">
-            </div>
+        <hr>
+
+        <div class="section">
+            <h3>Parte Superior</h3>
+            <div id="topsGallery" class="gallery"></div>
         </div>
 
-        <div class="camera-controls">
-            <div class="capture-btn" onclick="takePhoto()"><div class="capture-btn-inner"></div></div>
+        <div class="section">
+            <h3>Parte Inferior</h3>
+            <div id="bottomsGallery" class="gallery"></div>
         </div>
     </div>
-
-    <!-- RESPALDO CÁMARA NATIVA -->
-    <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleNativePhoto(event)">
-    <canvas id="hiddenCanvas" style="display:none;"></canvas>
 
     <script>
-        const tops = ["/resultados/camiseta_transparente.png", "/resultados/WhatsApp Image 2026-09-10 at 19.18.18_transparente.png"];
-        const bottoms = ["/resultados/WhatsApp Image 2026-09-10 at 22.29.19 (1)_transparente.png"];
-        let topIdx = 0, bottomIdx = 0, currentStream = null, currentType = 'camiseta';
+        // Redimensiona la foto en el móvil para evitar exceder límites de memoria y timeout
+        async function comprimirImagen(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 1024;
+                        const scaleSize = MAX_WIDTH / img.width;
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleSize;
 
-        function updateTop() { if(tops.length) document.getElementById('topImg').src = tops[topIdx]; }
-        function updateBottom() { if(bottoms.length) document.getElementById('bottomImg').src = bottoms[bottomIdx]; }
-        function prevTop() { if(tops.length){ topIdx = (topIdx - 1 + tops.length) % tops.length; updateTop(); } }
-        function nextTop() { if(tops.length){ topIdx = (topIdx + 1) % tops.length; updateTop(); } }
-        function prevBottom() { if(bottoms.length){ bottomIdx = (bottomIdx - 1 + bottoms.length) % bottoms.length; updateBottom(); } }
-        function nextBottom() { if(bottoms.length){ bottomIdx = (bottomIdx + 1) % bottoms.length; updateBottom(); } }
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        async function openCamera() {
-            document.getElementById('cameraModal').classList.add('active');
+                        canvas.toBlob((blob) => {
+                            resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                        }, 'image/jpeg', 0.85);
+                    };
+                };
+            });
+        }
+
+        async function uploadImage() {
+            const input = document.getElementById('imageInput');
+            const typeSelect = document.getElementById('typeSelect');
+            const status = document.getElementById('status');
+            const btn = document.getElementById('uploadBtn');
+
+            if (!input.files || !input.files[0]) {
+                alert('Por favor selecciona una imagen primero.');
+                return;
+            }
+
+            btn.disabled = true;
+            status.style.color = 'black';
+            status.innerText = 'Procesando imagen (quitando fondo)...';
+
             try {
-                currentStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
-                document.getElementById('videoFeed').srcObject = currentStream;
+                const rawFile = input.files[0];
+                const compressedFile = await comprimirImagen(rawFile);
+
+                const formData = new FormData();
+                formData.append('file', compressedFile);
+                formData.append('type', typeSelect.value);
+
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    status.style.color = 'green';
+                    status.innerText = '¡Prenda guardada correctamente!';
+                    loadGarments();
+                } else {
+                    status.style.color = 'red';
+                    status.innerText = 'Error: ' + (result.error || 'No se pudo procesar la imagen');
+                }
             } catch (err) {
-                closeCamera();
-                document.getElementById('nativeCameraInput').click();
+                status.style.color = 'red';
+                status.innerText = 'Error de conexión al subir la imagen.';
+            } finally {
+                btn.disabled = false;
             }
         }
 
-        function closeCamera() {
-            if (currentStream) { currentStream.getTracks().forEach(track => track.stop()); }
-            document.getElementById('cameraModal').classList.remove('active');
-        }
+        async function loadGarments() {
+            try {
+                const res = await fetch('/api/garments');
+                const data = await res.json();
 
-        function setSilhouette(type) {
-            currentType = type;
-            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-            const guide = document.getElementById('guideImg');
-            
-            if (type === 'camiseta') {
-                document.getElementById('btnCamiseta').classList.add('active');
-                guide.src = tops[0] || "/resultados/camiseta_transparente.png";
-            } else if (type === 'pantalon') {
-                document.getElementById('btnPantalon').classList.add('active');
-                guide.src = bottoms[0] || "/resultados/WhatsApp Image 2026-09-10 at 22.29.19 (1)_transparente.png";
+                const topsGallery = document.getElementById('topsGallery');
+                const bottomsGallery = document.getElementById('bottomsGallery');
+
+                topsGallery.innerHTML = '';
+                bottomsGallery.innerHTML = '';
+
+                data.tops.forEach(src => {
+                    const img = document.createElement('img');
+                    img.src = src + '?t=' + new Date().getTime();
+                    topsGallery.appendChild(img);
+                });
+
+                data.bottoms.forEach(src => {
+                    const img = document.createElement('img');
+                    img.src = src + '?t=' + new Date().getTime();
+                    bottomsGallery.appendChild(img);
+                });
+            } catch (err) {
+                console.error('Error cargando imágenes:', err);
             }
         }
 
-        function takePhoto() {
-            const video = document.getElementById('videoFeed');
-            const canvas = document.getElementById('hiddenCanvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            canvas.toBlob(blob => {
-                enviarAlServidor(blob);
-            }, 'image/jpeg', 0.95);
-            
-            closeCamera();
-        }
-
-        function handleNativePhoto(event) {
-            const file = event.target.files[0];
-            if (file) { enviarAlServidor(file); }
-        }
-
-        function enviarAlServidor(fileBlob) {
-            const formData = new FormData();
-            formData.append('file', fileBlob, 'foto.jpg');
-            formData.append('type', currentType);
-
-            alert("Subiendo y procesando imagen en Render...");
-
-            fetch('/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                alert("¡Prenda procesada y añadida!");
-                location.reload();
-            })
-            .catch(err => alert("Error procesando la foto"));
-        }
-
+        window.onload = loadGarments;
+    </script>
+</body>
+</html>
         updateTop(); updateBottom();
     </script>
 </body>
