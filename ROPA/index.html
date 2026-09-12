@@ -5,70 +5,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Armario Virtual</title>
     <style>
-        body { font-family: sans-serif; text-align: center; margin: 20px; background-color: #f4f4f9; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .section { margin-bottom: 20px; }
-        .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px; }
-        .gallery img { width: 100px; height: 100px; object-fit: contain; border: 1px solid #ddd; border-radius: 5px; background-color: #fff; }
-        button { background-color: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; }
+        body { font-family: system-ui, -apple-system, sans-serif; text-align: center; margin: 0; padding: 15px; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .section { margin-bottom: 25px; }
+        
+        /* Zona de combinación interactiva */
+        .outfit-builder { position: relative; width: 220px; height: 320px; margin: 0 auto 20px auto; border: 2px dashed #ccc; border-radius: 10px; background: #fafafa; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+        .outfit-slot { width: 100%; height: 50%; display: flex; align-items: center; justify-content: center; position: relative; }
+        .outfit-slot img { max-width: 85%; max-height: 85%; object-fit: contain; position: absolute; }
+        .placeholder-text { color: #aaa; font-size: 13px; }
+
+        /* Galerías de selección */
+        .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px; max-height: 150px; overflow-y: auto; padding: 5px; border: 1px solid #eee; border-radius: 6px; }
+        .gallery img { width: 70px; height: 70px; object-fit: contain; border: 2px solid transparent; border-radius: 6px; background-color: #fff; cursor: pointer; transition: transform 0.1s; }
+        .gallery img:active { transform: scale(0.95); }
+        .gallery img.selected { border-color: #007bff; background-color: #eef5ff; }
+
+        button { background-color: #007bff; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 15px; font-weight: bold; width: 100%; cursor: pointer; }
         button:disabled { background-color: #ccc; }
-        #status { margin-top: 15px; font-weight: bold; }
+        select, input[type="file"] { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; }
+        #status { margin-top: 10px; font-weight: 600; font-size: 14px; word-break: break-word; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Mi Armario Virtual</h1>
 
+        <!-- COMBINADOR VISUAL DE OUTFITS -->
         <div class="section">
-            <h3>Añadir Prenda</h3>
-            <input type="file" id="imageInput" accept="image/*" capture="environment">
-            <br><br>
+            <h3>Combinador de Ropa</h3>
+            <div class="outfit-builder">
+                <div class="outfit-slot" id="topSlot">
+                    <span class="placeholder-text">Selecciona Top</span>
+                </div>
+                <div class="outfit-slot" id="bottomSlot">
+                    <span class="placeholder-text">Selecciona Pantalón</span>
+                </div>
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #eee;">
+
+        <!-- SECCIÓN DE SUBIDA -->
+        <div class="section">
+            <h3>Añadir Nueva Prenda</h3>
+            <input type="file" id="imageInput" accept="image/*">
             <select id="typeSelect">
                 <option value="camiseta">Camiseta / Superior</option>
                 <option value="pantalon">Pantalón / Inferior</option>
             </select>
-            <br><br>
             <button id="uploadBtn" onclick="uploadImage()">Subir y Procesar</button>
             <p id="status"></p>
         </div>
 
-        <hr>
+        <hr style="border: 0; border-top: 1px solid #eee;">
 
+        <!-- GALERÍAS -->
         <div class="section">
-            <h3>Parte Superior</h3>
+            <h3>Partes Superiores</h3>
             <div id="topsGallery" class="gallery"></div>
         </div>
 
         <div class="section">
-            <h3>Parte Inferior</h3>
+            <h3>Partes Inferiores</h3>
             <div id="bottomsGallery" class="gallery"></div>
         </div>
     </div>
 
     <script>
-        // Redimensiona la foto en el móvil para evitar exceder límites de memoria y timeout
-        async function comprimirImagen(file) {
+        let selectedTopSrc = null;
+        let selectedBottomSrc = null;
+
+        // Comandante de compresión móvil segura
+        async function prepararArchivo(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
-                reader.readAsDataURL(file);
+                reader.onerror = () => resolve(file);
                 reader.onload = (event) => {
                     const img = new Image();
-                    img.src = event.target.result;
+                    img.onerror = () => resolve(file);
                     img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const MAX_WIDTH = 1024;
-                        const scaleSize = MAX_WIDTH / img.width;
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * scaleSize;
+                        try {
+                            const canvas = document.createElement('canvas');
+                            const MAX_WIDTH = 1000;
+                            let width = img.width;
+                            let height = img.height;
 
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            if (width > MAX_WIDTH) {
+                                height = Math.round((height * MAX_WIDTH) / width);
+                                width = MAX_WIDTH;
+                            }
 
-                        canvas.toBlob((blob) => {
-                            resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-                        }, 'image/jpeg', 0.85);
+                            canvas.width = width;
+                            canvas.height = height;
+
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+
+                            canvas.toBlob((blob) => {
+                                if (blob) {
+                                    resolve(new File([blob], "foto.jpg", { type: 'image/jpeg' }));
+                                } else {
+                                    resolve(file);
+                                }
+                            }, 'image/jpeg', 0.8);
+                        } catch (e) {
+                            resolve(file);
+                        }
                     };
+                    img.src = event.target.result;
                 };
+                reader.readAsDataURL(file);
             });
         }
 
@@ -84,15 +131,15 @@
             }
 
             btn.disabled = true;
-            status.style.color = 'black';
-            status.innerText = 'Procesando imagen (quitando fondo)...';
+            status.style.color = '#333';
+            status.innerText = 'Comprimiendo y procesando fondo...';
 
             try {
                 const rawFile = input.files[0];
-                const compressedFile = await comprimirImagen(rawFile);
+                const fileToSend = await prepararArchivo(rawFile);
 
                 const formData = new FormData();
-                formData.append('file', compressedFile);
+                formData.append('file', fileToSend);
                 formData.append('type', typeSelect.value);
 
                 const response = await fetch('/upload', {
@@ -104,17 +151,36 @@
 
                 if (response.ok) {
                     status.style.color = 'green';
-                    status.innerText = '¡Prenda guardada correctamente!';
+                    status.innerText = '¡Prenda guardada con éxito!';
+                    input.value = '';
                     loadGarments();
                 } else {
                     status.style.color = 'red';
-                    status.innerText = 'Error: ' + (result.error || 'No se pudo procesar la imagen');
+                    status.innerText = 'Error: ' + (result.error || 'No se pudo procesar');
                 }
             } catch (err) {
                 status.style.color = 'red';
-                status.innerText = 'Error de conexión al subir la imagen.';
+                status.innerText = 'Error de conexión con el servidor.';
             } finally {
                 btn.disabled = false;
+            }
+        }
+
+        function seleccionarPrenda(src, tipo, elementoImg) {
+            if (tipo === 'top') {
+                document.querySelectorAll('#topsGallery img').forEach(img => img.classList.remove('selected'));
+                selectedTopSrc = src;
+                elementoImg.classList.add('selected');
+                
+                const slot = document.getElementById('topSlot');
+                slot.innerHTML = `<img src="${src}" alt="Top">`;
+            } else {
+                document.querySelectorAll('#bottomsGallery img').forEach(img => img.classList.remove('selected'));
+                selectedBottomSrc = src;
+                elementoImg.classList.add('selected');
+                
+                const slot = document.getElementById('bottomSlot');
+                slot.innerHTML = `<img src="${src}" alt="Bottom">`;
             }
         }
 
@@ -131,25 +197,27 @@
 
                 data.tops.forEach(src => {
                     const img = document.createElement('img');
-                    img.src = src + '?t=' + new Date().getTime();
+                    const cacheBustSrc = src + '?t=' + new Date().getTime();
+                    img.src = cacheBustSrc;
+                    img.onclick = () => seleccionarPrenda(cacheBustSrc, 'top', img);
+                    if (selectedTopSrc === cacheBustSrc) img.classList.add('selected');
                     topsGallery.appendChild(img);
                 });
 
                 data.bottoms.forEach(src => {
                     const img = document.createElement('img');
-                    img.src = src + '?t=' + new Date().getTime();
+                    const cacheBustSrc = src + '?t=' + new Date().getTime();
+                    img.src = cacheBustSrc;
+                    img.onclick = () => seleccionarPrenda(cacheBustSrc, 'bottom', img);
+                    if (selectedBottomSrc === cacheBustSrc) img.classList.add('selected');
                     bottomsGallery.appendChild(img);
                 });
             } catch (err) {
-                console.error('Error cargando imágenes:', err);
+                console.error('Error cargando armario:', err);
             }
         }
 
         window.onload = loadGarments;
-    </script>
-</body>
-</html>
-        updateTop(); updateBottom();
     </script>
 </body>
 </html>
