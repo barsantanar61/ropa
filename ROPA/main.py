@@ -4,7 +4,7 @@ import base64
 import requests
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-from rembg import remove
+from rembg import remove, new_session
 from PIL import Image
 
 app = Flask(__name__, static_folder='.')
@@ -18,6 +18,9 @@ os.makedirs(RESULTADOS_FOLDER, exist_ok=True)
 
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
 GITHUB_REPO = "barsantanar61/ropa"
+
+# Carga la sesión ligera de IA (u2netp) para procesamiento ultra-rápido y bajo consumo de memoria
+session_rembg = new_session("u2netp")
 
 def guardar_en_github_permanente(filepath_local, filename):
     """Sube la imagen procesada a la carpeta resultados/ en GitHub."""
@@ -87,18 +90,23 @@ def upload_file():
     file.save(filepath_upload)
     
     try:
-        # Procesamiento directo en memoria (mucho más rápido que un subproceso)
+        # Recorte directo en memoria con el modelo liviano
         input_image = Image.open(filepath_upload)
-        output_image = remove(input_image)
+        output_image = remove(input_image, session=session_rembg)
         output_image.save(filepath_resultado)
         
-        # Guardar en GitHub
+        # Persistencia en GitHub
         guardar_en_github_permanente(filepath_resultado, filename)
 
         return jsonify({'message': 'Foto procesada correctamente', 'filename': filename}), 200
     except Exception as e:
         print(f"Error procesando imagen: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
 
 
 if __name__ == '__main__':
