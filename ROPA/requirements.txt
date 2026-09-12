@@ -2,4 +2,7 @@ Flask
 flask-cors
 rembg
 Pillow
+opencv-python-headless
+numpy
+requests
 gunicorn
