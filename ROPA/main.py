@@ -19,13 +19,13 @@ os.makedirs(RESULTADOS_FOLDER, exist_ok=True)
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
 GITHUB_REPO = "barsantanar61/ropa"
 
-# Carga la sesión ligera de IA (u2netp) para procesamiento ultra-rápido y bajo consumo de memoria
+# Sesión ligera de rembg para ejecución rápida en entornos limitados
 session_rembg = new_session("u2netp")
 
 def guardar_en_github_permanente(filepath_local, filename):
-    """Sube la imagen procesada a la carpeta resultados/ en GitHub."""
+    """Sube la imagen procesada a la carpeta ROPA/resultados/ en GitHub."""
     if not GITHUB_TOKEN:
-        print("Aviso: GITHUB_TOKEN no encontrado. Guardado permanente omitido.")
+        print("Aviso: GITHUB_TOKEN no configurado. Guardado permanente omitido.")
         return
 
     url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/ROPA/resultados/{filename}"
@@ -90,8 +90,8 @@ def upload_file():
     file.save(filepath_upload)
     
     try:
-        # Recorte directo en memoria con el modelo liviano
-        input_image = Image.open(filepath_upload)
+        # Abrir y convertir a RGB para asegurar compatibilidad con capturas de móvil (JPEG, HEIC, PNG)
+        input_image = Image.open(filepath_upload).convert('RGB')
         output_image = remove(input_image, session=session_rembg)
         output_image.save(filepath_resultado)
         
@@ -106,9 +106,4 @@ def upload_file():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
-
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
